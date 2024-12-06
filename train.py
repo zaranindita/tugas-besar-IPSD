@@ -5,6 +5,7 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader, random_split
 from torchvision import models, transforms
+
 from torchvision.datasets import ImageFolder
 from Utils.getData import Data
 
@@ -15,26 +16,22 @@ def main():
     LEARNING_RATE = 0.001
     NUM_CLASSES = 6  
 
-    # Paths to dataset
+    # dataset
     aug_path = "C:/Users/Admin/Documents/Praktikum IPSD/TUGAS/Dataset/Augmented Images/Augmented Images/FOLDS_AUG/"
     orig_path = "C:/Users/Admin/Documents/Praktikum IPSD/TUGAS/Dataset/Original Images/Original Images/FOLDS/"
-
-    # Initialize dataset
     dataset = Data(base_folder_aug=aug_path, base_folder_orig=orig_path)
-
-    # Combine augmented and original data
     full_data = dataset.dataset_train + dataset.dataset_aug
 
-    # Split into training and validation sets (80-20 split)
+    # split train dan valid (80-20)
     train_size = int(0.8 * len(full_data))
     val_size = len(full_data) - train_size
     train_data, val_data = random_split(full_data, [train_size, val_size])
 
-    # Create data loaders
+    # data loader
     train_loader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True)
     val_loader = DataLoader(val_data, batch_size=BATCH_SIZE, shuffle=False)
 
-    # Define model, loss function, and optimizer
+    # model, loss func, optim
     model = models.mobilenet_v3_large(pretrained=True)
     model.classifier[-1] = nn.Linear(model.classifier[-1].in_features, NUM_CLASSES)
     loss_fn = nn.CrossEntropyLoss()
@@ -42,9 +39,8 @@ def main():
 
     train_losses, val_losses = [], []
 
-    # Training loop
+    # training loop
     for epoch in range(EPOCH):
-        # Training phase
         model.train()
         loss_train, correct_train, total_train = 0.0, 0, 0
 
@@ -67,7 +63,7 @@ def main():
         accuracy_train = 100 * correct_train / total_train
         train_losses.append(loss_train / len(train_loader))
 
-        # Validation phase
+        # valid
         model.eval()
         loss_val, correct_val, total_val = 0.0, 0, 0
 
@@ -91,10 +87,9 @@ def main():
               f"Train Loss: {train_losses[-1]:.4f}, Accuracy: {accuracy_train:.2f}%, "
               f"Val Loss: {val_losses[-1]:.4f}, Accuracy: {accuracy_val:.2f}%")
 
-    # Save the trained model
+    # simpan
     torch.save(model.state_dict(), "trained_modelmobilenet.pth")
 
-    # Plot training and validation loss
     plt.plot(range(EPOCH), train_losses, color="#3399e6", label='Train Loss')
     plt.plot(range(EPOCH), val_losses, color="#ff5733", label='Validation Loss')
     plt.xlabel('Epoch')
